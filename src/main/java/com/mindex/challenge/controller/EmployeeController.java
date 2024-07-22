@@ -1,6 +1,7 @@
 package com.mindex.challenge.controller;
 
 import com.mindex.challenge.data.Employee;
+import com.mindex.challenge.data.ReportingStructure;
 import com.mindex.challenge.service.EmployeeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +31,16 @@ public class EmployeeController {
 
     @PutMapping("/employee/{id}")
     public Employee update(@PathVariable String id, @RequestBody Employee employee) {
-        LOG.debug("Received employee create request for id [{}] and employee [{}]", id, employee);
+        LOG.debug("Received employee create request for id [{}] and employee [{}]", id, employee); //TODO: fix typo
 
         employee.setEmployeeId(id);
         return employeeService.update(employee);
+    }
+
+    @GetMapping("/employee/{id}/reporting-structure")
+    public ReportingStructure getReportingStructure(@PathVariable String id) {
+        LOG.debug("Received employee reporting structure get request for id [{}]", id);
+
+        return employeeService.getReportingStructure(id);
     }
 }
