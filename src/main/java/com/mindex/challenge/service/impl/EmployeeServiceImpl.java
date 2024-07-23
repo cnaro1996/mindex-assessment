@@ -1,6 +1,8 @@
 package com.mindex.challenge.service.impl;
 
+import com.mindex.challenge.dao.CompensationRepository;
 import com.mindex.challenge.dao.EmployeeRepository;
+import com.mindex.challenge.data.Compensation;
 import com.mindex.challenge.data.Employee;
 import com.mindex.challenge.data.ReportingStructure;
 import com.mindex.challenge.service.EmployeeService;
@@ -19,6 +21,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    @Autowired
+    private CompensationRepository compensationRepository;
+
     @Override
     public Employee create(Employee employee) {
         LOG.debug("Creating employee [{}]", employee);
@@ -31,7 +36,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Employee read(String id) {
-        LOG.debug("Creating employee with id [{}]", id);
+        LOG.debug("Creating employee with id [{}]", id); //TODO: fix typo
 
         Employee employee = employeeRepository.findByEmployeeId(id);
 
@@ -70,17 +75,38 @@ public class EmployeeServiceImpl implements EmployeeService {
      * determined by aggregating the number of directReports for an employee and all of their distinct reports.
      */
     private int calculateNumberOfReports(Employee employee) {
-        if(employee.getDirectReports() == null || employee.getDirectReports().isEmpty()) {
+        if (employee.getDirectReports() == null || employee.getDirectReports().isEmpty()) {
             return 0;
         }
 
         int reports = employee.getDirectReports().size();
-        for(Employee directReport : employee.getDirectReports()) {
+        for (Employee directReport : employee.getDirectReports()) {
             // The directReports entries are Employee objects with unpopulated directReports fields.
             Employee populatedDirectReport = employeeRepository.findByEmployeeId(directReport.getEmployeeId());
-            reports += calculateNumberOfReports(populatedDirectReport);
+            if (populatedDirectReport != null) { // directReports' employeeIds are not validated on creation.
+                reports += calculateNumberOfReports(populatedDirectReport);
+            }
         }
 
         return reports;
+    }
+
+    @Override
+    public Compensation getCompensation(String employeeId) {
+        LOG.debug("Getting compensation for employee with id [{}]", employeeId);
+
+        Compensation compensation = compensationRepository.findByEmployee_EmployeeId(employeeId);
+        if (compensation == null) {
+            throw new RuntimeException("No compensation found for employeeId " + employeeId);
+        }
+
+        return compensation;
+    }
+
+    @Override
+    public Compensation createCompensation(Compensation compensation) {
+        LOG.debug("Creating compensation [{}]", compensation);
+
+        return compensationRepository.insert(compensation);
     }
 }
